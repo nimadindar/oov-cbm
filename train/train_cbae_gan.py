@@ -1,3 +1,11 @@
+"""
+@inproceedings{kulkarni2025interpretable
+    title={Interpretable Generative Models through Post-hoc Concept Bottlenecks},
+    author={Kulkarni, Akshay and Yan, Ge and Sun, Chung-En and Oikarinen, Tuomas and Weng, Tsui-Wei},
+    booktitle={IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+    year={2025},
+}
+"""
 import os
 import sys
 sys.path.append('.')
