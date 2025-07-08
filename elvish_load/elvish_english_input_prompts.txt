@@ -1,0 +1,41 @@
+elvish_english_pairs = [
+    ("A Elbereth Gilthoniel, silivren penna míriel", "O Elbereth Star-kindler, white-glittering, crowned with a jewel"),
+    ("Elen síla lúmenn’ omentielvo", "A star shines on the hour of our meeting"),
+    ("Mellon nin, sui dae", "Be my friend, as before"),
+    ("Namarie, Nai hiruvalye Valimar", "Farewell, may you find Valimar"),
+    ("Ú-chebin estel anim", "I have kept no hope for myself"),
+    ("Losto i dhû, mellyn nin", "Sleep now, my friends"),
+    ("I elenath lín aearon e-guil", "Your stars are an ocean of clouds"),
+    ("Aníron aníron an-uir", "I desire, I desire forever"),
+    ("Cala laita i lam nîn", "Light upon my path"),
+    ("Tolo dan i 'lann", "Come to the land"),
+    ("Garo arad lín na menel", "Have your day in the heavens"),
+    ("Ithil linna an i ardhon", "The moon sings over the land"),
+    ("Ú-cheniatha evedui", "I have not seen the end"),
+    ("Lacho calad! Drego morn!", "Flame light! Flee darkness!"),
+    ("Hîr na vedui, ammen chenion", "Lord at last, you will see us"),
+    ("Tawarwaith o Edhil", "Forest people of the Elves"),
+    ("Gilthoniel a star shines bright", "Star-kindler, a star shines bright"),
+    ("Aearon na faeg nín", "Ocean is my fate"),
+    ("Calad na ven, a chuil lín", "Light is a gift, and your life"),
+    ("I 'lass ammen enniath", "The day for us has come"),
+    ("Lindar na telya i ndor", "Singers are weaving the land"),
+    ("Amin mela lle, mellon nin", "I love you, my friend"),
+    ("Carnilossë i thîr lín", "Red blossom of your land"),
+    ("Gwanno i dath lín na dae", "Go with your color forever"),
+    ("Amrûn bain na ven", "The beautiful dawn is a gift"),
+    ("Tolo i ardhon na thalion", "Come to the land of the strong"),
+    ("Elen sila lumenn omentielvo", "A star shines on the hour of our meeting"),
+    ("Drego morn! Lacho calad!", "Flee darkness! Flame light!"),
+    ("Echad nîn na mellyn", "My forging is for friends"),
+    ("Aearon e-guil linna na aer", "Ocean of clouds sings to the sea"),
+]
+
+This file has some data on which we can evaluate our methodology. 
+Metrics: 
+
+1. Similarity between image generated for elvish text (without adaptive layer), english text and elvish text (after adaptive layer). 
+  a. Quantitively: using image comparison measures
+  b. Qualitatively: By asking users how much they would rate each picture on a Likert scale of 1-5 
+
+2. Interpretability: We can print the concepts that are activated before we generate the prompt to stable diffusion. The concepts activated tell us what is guiding the diffusion process.
