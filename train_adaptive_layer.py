@@ -18,6 +18,9 @@ class TextEmbeddingDataset(Dataset):
         self.preprocess_text()  # Precompute CLIP embeddings
 
     def preprocess_text(self):
+        # TODO Nima: This currently encodes text into CLIP embedding. 
+        # We need to encode the CLIP embedding further into concept bottleneck layers.
+        # This can be done simply by calling the cbae on CLIP embedding.
         self.embeddings_t = []
         self.embeddings_t_eng = []
         for t, t_eng in tqdm(self.text_pairs, desc="Encoding text with CLIP"):
@@ -36,7 +39,7 @@ class TextEmbeddingDataset(Dataset):
     def __getitem__(self, idx):
         return self.embeddings_t[idx], self.embeddings_t_eng[idx]
 
-# --- Define Mapping Network ---
+# --- Define Adaptive Layer ---
 class AdaptiveLayer(nn.Module):
     # in literature, also called Concept Intervention
     def __init__(self, input_dim=512, output_dim=512):
@@ -45,7 +48,7 @@ class AdaptiveLayer(nn.Module):
             nn.Linear(input_dim, 1024),
             nn.ReLU(),
             nn.Linear(1024, output_dim),
-            nn.LogSoftmax(dim=-1)  # For KLDivLoss
+            nn.LogSoftmax(dim=-1)  # For KL Divergence. We use this because we are mapping concepts
         )
 
     def forward(self, x):
@@ -65,7 +68,7 @@ def train_mapping():
     dataset = TextEmbeddingDataset(text_pairs, clip_model, device)
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
-    # Initialize mapping network
+    # Initialize adaptive layer mapping concepts of elvish text to concepts of equivalent english text.
     mapping_net = AdaptiveLayer().to(device)
     optimizer = optim.Adam(mapping_net.parameters(), lr=1e-4)
     criterion = nn.KLDivLoss(reduction="batchmean")  # KL-Divergence
