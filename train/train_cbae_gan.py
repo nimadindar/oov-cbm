@@ -165,7 +165,7 @@ def main():
             ['NOT solid belly pattern', 'Solid belly pattern'],
             ['NOT All purpose bill shape', 'All purpose bill shape'],
             ['NOT black upperparts color', 'Black upperparts color'],
-            ['NOT white underparts color', 'White underparts color'],
+            ['NOT white un  derparts color', 'White underparts color'],
         ]
         # for supervised pseudo-label model if used
         clsf_model_type = 'rn50'

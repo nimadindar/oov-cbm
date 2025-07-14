@@ -63,7 +63,7 @@ class CB_AE(nn.Module):
         # the latent vector will be like (batch_size, 14, 512)
         # where the 512 vector is repeated 14 times since there are 14 layers in the stylegan synthesis network
         # so we can take any one of the 14 (but use mean to maintain differentiability)
-        x = torch.mean(x, dim=1)
+        # x = torch.mean(x, dim=1)
         return self.encoder(x)
     
     def dec(self, x):

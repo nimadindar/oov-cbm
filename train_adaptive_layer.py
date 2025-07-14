@@ -1,11 +1,16 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import clip
 import numpy as np
 from tqdm import tqdm
 import os
+
+# --- Load CB-AE ---
+from sparse_autoencoder import SparseAutoencoder
+
 
 # --- Load your dataset ---
 from elvish_load.load_elvish_dataset import load_elvish_dataset
@@ -15,7 +20,16 @@ class TextEmbeddingDataset(Dataset):
         self.text_pairs = text_pairs  # List of (t, t_eng) pairs
         self.clip_model = clip_model
         self.device = device
+        self.cb = SparseAutoencoder(
+                n_input_features=512,
+                n_learned_features=4096,
+                n_components=1)
+        
+        self.cb.load_state_dict(torch.load("./DNCBM/Checkpoints/clip_ViT-B_16_sparse_autoencoder_final.pt"))
+        self.cb.to(self.device)
+        self.cb.eval()
         self.preprocess_text()  # Precompute CLIP embeddings
+        
 
     def preprocess_text(self):
         # TODO Nima: This currently encodes text into CLIP embedding. 
@@ -28,10 +42,21 @@ class TextEmbeddingDataset(Dataset):
             with torch.no_grad():
                 tokens_t = clip.tokenize([t]).to(self.device)
                 tokens_t_eng = clip.tokenize([t_eng]).to(self.device)
-                embed_t = self.clip_model.encode_text(tokens_t).squeeze(0)
-                embed_t_eng = self.clip_model.encode_text(tokens_t_eng).squeeze(0)
-            self.embeddings_t.append(embed_t.cpu())
-            self.embeddings_t_eng.append(embed_t_eng.cpu())
+                embed_t = self.clip_model.encode_text(tokens_t).squeeze(0).to(torch.float32)  
+                embed_t_eng = self.clip_model.encode_text(tokens_t_eng).squeeze(0).to(torch.float32)  
+
+                embed_t = embed_t.unsqueeze(0).unsqueeze(0)  # Add batch and component dims: [1, 1, 512]
+                embed_t_eng = embed_t_eng.unsqueeze(0).unsqueeze(0)  # [1, 1, 512]
+
+                embed_t = self.cb.pre_encoder_bias(embed_t)  # Shape: [1, 1, 512]
+                embed_t_eng = self.cb.pre_encoder_bias(embed_t_eng)  # Shape: [1, 1, 512]
+
+                
+                concept_embed_t = self.cb.encoder(embed_t).squeeze(0).squeeze(0) 
+                concept_embed_t_eng = self.cb.encoder(embed_t_eng).squeeze(0).squeeze(0)
+
+            self.embeddings_t.append(concept_embed_t.cpu())
+            self.embeddings_t_eng.append(concept_embed_t_eng.cpu())
 
     def __len__(self):
         return len(self.text_pairs)
@@ -42,12 +67,12 @@ class TextEmbeddingDataset(Dataset):
 # --- Define Adaptive Layer ---
 class AdaptiveLayer(nn.Module):
     # in literature, also called Concept Intervention
-    def __init__(self, input_dim=512, output_dim=512):
+    def __init__(self, input_dim=4096, output_dim=4096):
         super().__init__()
         self.fc = nn.Sequential(
-            nn.Linear(input_dim, 1024),
+            nn.Linear(input_dim, 4096),
             nn.ReLU(),
-            nn.Linear(1024, output_dim),
+            nn.Linear(4096, output_dim),
             nn.LogSoftmax(dim=-1)  # For KL Divergence. We use this because we are mapping concepts
         )
 
@@ -60,7 +85,7 @@ def train_mapping():
     print(f"Using device: {device}")
 
     # Load CLIP model
-    clip_model, _ = clip.load("ViT-B/32", device=device)
+    clip_model, _ = clip.load("ViT-B/16", device=device)
     clip_model.eval()
 
     # Load dataset (current structure: [(t_elvish, t_english), ...])
@@ -74,7 +99,7 @@ def train_mapping():
     criterion = nn.KLDivLoss(reduction="batchmean")  # KL-Divergence
 
     # Training
-    num_epochs = 100
+    num_epochs = 20
     checkpoint_dir = "checkpoints"
     os.makedirs(checkpoint_dir, exist_ok=True)
 
@@ -110,7 +135,7 @@ def train_mapping():
             print(f"Saved checkpoint to {checkpoint_path}")
 
     # Save final model
-    final_model_path = os.path.join(checkpoint_dir, "clip_mapping_net_final.pth")
+    final_model_path = os.path.join(checkpoint_dir, "clip_mapping_net_final_ViT-B-16.pth")
     torch.save(mapping_net.state_dict(), final_model_path)
     print(f"Saved final model to {final_model_path}")
 
